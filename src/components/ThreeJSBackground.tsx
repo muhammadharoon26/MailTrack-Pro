@@ -3,7 +3,7 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as random from "maath/random";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import * as THREE from "three";
 
 function Stars(props: any) {
@@ -11,8 +11,14 @@ function Stars(props: any) {
   const [sphere] = useState(
     () => random.inSphere(new Float32Array(5000), { radius: 1.5 }) as Float32Array
   );
+  
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, [])
 
   useFrame((_state, delta) => {
+    if (!isClient || !ref.current) return;
     ref.current.rotation.x -= delta / 10;
     ref.current.rotation.y -= delta / 15;
   });
