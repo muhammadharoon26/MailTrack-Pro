@@ -16,9 +16,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import ThreeJSBackground from "./ThreeJSBackground";
-import { ClientOnly } from "./ClientOnly";
-
 
 const navItems = [
   { href: "/", label: "Compose", icon: Send },
@@ -30,10 +27,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <ClientOnly>
-        <ThreeJSBackground />
-      </ClientOnly>
-      <div className="fixed inset-0 z-0 h-screen w-screen bg-transparent" />
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
