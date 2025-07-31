@@ -9,7 +9,10 @@ export async function getEmails(): Promise<Email[]> {
     // Ensure the table exists before trying to query it.
     await createTables();
     const { rows } = await db.query('SELECT id, "to", cc, bcc, subject, body, category, attachments, sent_at as "sentAt", follow_up_at as "followUpAt" FROM emails ORDER BY sent_at DESC');
-    return rows as Email[];
+    
+    // If no rows are returned, it's not an error, just an empty list.
+    // Return an empty array to prevent downstream errors.
+    return rows || [];
   } catch (error) {
     console.error('Error fetching emails:', error);
     throw new Error('Could not fetch emails.');
