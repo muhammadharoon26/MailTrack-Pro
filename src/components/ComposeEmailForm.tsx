@@ -395,6 +395,14 @@ export function ComposeEmailForm() {
     }
 
     setIsSending(true);
+
+    const { update } = toast({
+      title: "Sending Email...",
+      description: "Your message is on its way.",
+    });
+    form.reset();
+    setAttachments([]);
+
     try {
       const sendResult = await sendGmail({
         to: values.to, cc: values.cc, bcc: values.bcc, subject: values.subject, body: values.body,
@@ -404,36 +412,36 @@ export function ComposeEmailForm() {
         throw new Error(sendResult.message || "Failed to send email via Gmail.");
       }
 
-      const followUpResult = await scheduleFollowUp({
-        emailContent: values.body,
-        emailCategory: values.category,
-        senderEmail: currentUser.email,
-        recipientEmail: values.to,
-        subject: values.subject,
-      });
-
+      const [followUpResult] = await Promise.all([
+        scheduleFollowUp({
+          emailContent: values.body,
+          emailCategory: values.category,
+          senderEmail: currentUser.email,
+          recipientEmail: values.to,
+          subject: values.subject,
+        }),
+        refreshEmails()
+      ]);
+      
       await addEmail({
         ...values,
         followUpAt: followUpResult.followUpDate,
         attachments: attachments.map((file) => ({ name: file.name, size: file.size })),
       });
-      
-      await refreshEmails();
 
-      toast({
+      update({
         title: "Email Sent!",
-        description: `Your email was sent via Gmail. ${followUpResult.reason || ""}`,
+        description: "Your email was sent successfully via Gmail.",
       });
 
-      form.reset();
-      setAttachments([]);
     } catch (error: any) {
       console.error("Failed to send email:", error);
-      toast({
+      update({
         variant: "destructive",
         title: "Error Sending Email",
-        description: error.message || "Please check your connection or reconnect your Gmail account.",
+        description: error.message || "Please check your connection and try again.",
       });
+      form.reset(values);
     } finally {
       setIsSending(false);
     }
@@ -473,7 +481,6 @@ export function ComposeEmailForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                {/* --- THIS IS THE FIX --- */}
                 <FormControl>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger>
@@ -486,7 +493,6 @@ export function ComposeEmailForm() {
                     </SelectContent>
                   </Select>
                 </FormControl>
-                {/* -------------------- */}
                 <FormMessage />
               </FormItem>
             )}
