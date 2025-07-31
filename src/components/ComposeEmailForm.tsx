@@ -313,7 +313,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState, useEffect } from "react"; // Import useEffect
+import { useState, useEffect } from "react";
 import { Paperclip, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -349,7 +349,6 @@ const formSchema = z.object({
   body: z.string().min(1, { message: "Email body cannot be empty." }),
 });
 
-// Define a type for the user object we expect from our API
 interface User {
   name: string;
   email: string;
@@ -361,9 +360,8 @@ export function ComposeEmailForm() {
   const { refreshEmails } = useEmails();
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null); // State to hold the signed-in user
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Fetch the current user's data from our secure API endpoint
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -387,7 +385,6 @@ export function ComposeEmailForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Check if we have the sender's email before attempting to send
     if (!currentUser?.email) {
       toast({
         variant: "destructive",
@@ -399,7 +396,6 @@ export function ComposeEmailForm() {
 
     setIsSending(true);
     try {
-      // Step 1: Send the email via the Gmail API
       const sendResult = await sendGmail({
         to: values.to, cc: values.cc, bcc: values.bcc, subject: values.subject, body: values.body,
       });
@@ -408,16 +404,14 @@ export function ComposeEmailForm() {
         throw new Error(sendResult.message || "Failed to send email via Gmail.");
       }
 
-      // Step 2: Schedule the AI follow-up using the real sender email
       const followUpResult = await scheduleFollowUp({
         emailContent: values.body,
         emailCategory: values.category,
-        senderEmail: currentUser.email, // Use the fetched user's email
+        senderEmail: currentUser.email,
         recipientEmail: values.to,
         subject: values.subject,
       });
 
-      // Step 3: Save a record to your internal database
       await addEmail({
         ...values,
         followUpAt: followUpResult.followUpDate,
@@ -460,13 +454,96 @@ export function ComposeEmailForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="to" render={({ field }) => ( <FormItem> <FormLabel>To</FormLabel> <FormControl> <Input placeholder="recipient@example.com" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-          <FormField control={form.control} name="category" render={({ field }) => ( <FormItem> <FormLabel>Category</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a category" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="internship">Internship Application</SelectItem> <SelectItem value="job">Job Application</SelectItem> <SelectItem value="cold-outreach">Cold Outreach</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
+          <FormField
+            control={form.control}
+            name="to"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>To</FormLabel>
+                <FormControl>
+                  <Input placeholder="recipient@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                {/* --- THIS IS THE FIX --- */}
+                <FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="internship">Internship Application</SelectItem>
+                      <SelectItem value="job">Job Application</SelectItem>
+                      <SelectItem value="cold-outreach">Cold Outreach</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                {/* -------------------- */}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <FormField control={form.control} name="cc" render={({ field }) => ( <FormItem> <FormLabel>CC</FormLabel> <FormControl> <Input placeholder="cc@example.com" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-        <FormField control={form.control} name="bcc" render={({ field }) => ( <FormItem> <FormLabel>BCC</FormLabel> <FormControl> <Input placeholder="bcc@example.com" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-        <FormField control={form.control} name="subject" render={({ field }) => ( <FormItem> <FormLabel>Subject</FormLabel> <FormControl> <Input placeholder="Regarding your job opening" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-        <FormField control={form.control} name="body" render={({ field }) => ( <FormItem> <FormLabel>Body</FormLabel> <FormControl> <Textarea placeholder="Dear hiring manager..." className="min-h-[200px]" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+        <FormField
+          control={form.control}
+          name="cc"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>CC</FormLabel>
+              <FormControl>
+                <Input placeholder="cc@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="bcc"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>BCC</FormLabel>
+              <FormControl>
+                <Input placeholder="bcc@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="subject"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Subject</FormLabel>
+              <FormControl>
+                <Input placeholder="Regarding your job opening" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="body"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Body</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Dear hiring manager..." className="min-h-[200px]" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div>
           <FormLabel>Attachments</FormLabel>
           <p className="text-sm text-muted-foreground">Note: Attachments are not yet sent via Gmail in this demo.</p>
