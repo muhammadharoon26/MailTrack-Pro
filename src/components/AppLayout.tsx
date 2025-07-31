@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mail, Send, Timer } from "lucide-react";
-import dynamic from "next/dynamic";
 
 import {
   SidebarProvider,
@@ -18,11 +17,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const ThreeJSBackground = dynamic(() => import("./ThreeJSBackground"), {
-  ssr: false,
-});
-
-
 const navItems = [
   { href: "/", label: "Compose", icon: Send },
   { href: "/follow-up", label: "Follow-ups", icon: Timer },
@@ -33,7 +27,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <ThreeJSBackground />
+      <div className="fixed inset-0 z-0 h-screen w-screen bg-background" />
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
