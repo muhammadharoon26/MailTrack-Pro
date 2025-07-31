@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { db as vercelDb } from '@vercel/postgres';
 import { sql } from '@vercel/postgres';
 
