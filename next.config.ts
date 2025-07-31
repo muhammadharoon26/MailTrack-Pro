@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  transpilePackages: ['three'],
+  transpilePackages: ['three', '@react-three/drei', 'maath'],
 };
 
 export default nextConfig;

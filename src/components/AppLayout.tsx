@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mail, Send, Timer } from "lucide-react";
+import dynamic from "next/dynamic";
 
 import {
   SidebarProvider,
@@ -16,7 +17,11 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { ThreeJSBackground } from "./ThreeJSBackground";
+
+const ThreeJSBackground = dynamic(() => import("./ThreeJSBackground").then(mod => mod.ThreeJSBackground), {
+  ssr: false,
+});
+
 
 const navItems = [
   { href: "/", label: "Compose", icon: Send },
