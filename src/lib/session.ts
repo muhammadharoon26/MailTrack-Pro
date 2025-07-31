@@ -1,8 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
 
 const secretKey = process.env.AUTH_SECRET;
+// This check is crucial to prevent the server from crashing.
+if (!secretKey) {
+  throw new Error('AUTH_SECRET environment variable is not set. Please add it to your .env.local file.');
+}
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {
