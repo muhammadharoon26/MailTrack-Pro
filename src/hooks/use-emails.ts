@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Email } from '@/lib/types';
 import { isToday, parseISO } from 'date-fns';
 import { getEmails, addEmail as addEmailAction } from '@/lib/actions/emails';
+import { useToast } from './use-toast';
 
 export function useEmails() {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const refreshEmails = useCallback(async () => {
     setLoading(true);
@@ -16,11 +18,18 @@ export function useEmails() {
       setEmails(allEmails);
     } catch (error) {
       console.error("Failed to fetch emails from database", error);
-      // Optionally, show a toast to the user
+      // This is a critical error, but we don't want to crash the app.
+      // We'll show a toast and set emails to an empty array.
+      toast({
+        variant: "destructive",
+        title: "Database Error",
+        description: "Could not fetch your emails. Please try again later.",
+      });
+      setEmails([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     refreshEmails();
