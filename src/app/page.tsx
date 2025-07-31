@@ -1,6 +1,8 @@
 import { ComposeEmailForm } from '@/components/ComposeEmailForm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
+export const dynamic = 'force-dynamic';
+
 export default function ComposePage() {
   return (
     <div className="mx-auto max-w-4xl">
