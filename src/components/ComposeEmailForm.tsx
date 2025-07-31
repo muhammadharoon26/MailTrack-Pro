@@ -27,6 +27,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useEmails } from "@/hooks/use-emails";
 import { scheduleFollowUp } from "@/ai/flows/schedule-follow-up";
+import { sendGmail } from "@/lib/actions/sendGmail"; // <-- Import our new Gmail action
+import { addEmail } from "@/lib/actions/emails"; // Import the database action
 
 const formSchema = z.object({
   to: z.string().email({ message: "Invalid email address." }),
@@ -39,7 +41,7 @@ const formSchema = z.object({
 
 export function ComposeEmailForm() {
   const { toast } = useToast();
-  const { addEmail } = useEmails();
+  const { refreshEmails } = useEmails(); // Get the refresh function
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
 
@@ -58,38 +60,60 @@ export function ComposeEmailForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSending(true);
     try {
-      // For this demo, we'll simulate sending and then schedule follow-up.
-      const { to, subject, body, category } = values;
-
-      const followUpResult = await scheduleFollowUp({
-        emailContent: body,
-        emailCategory: category,
-        senderEmail: "mharoon1326@gmail.com",
-        recipientEmail: to,
-        subject: subject,
+      // Step 1: Send the email using the secure Gmail server action
+      const sendResult = await sendGmail({
+        to: values.to,
+        cc: values.cc,
+        bcc: values.bcc,
+        subject: values.subject,
+        body: values.body,
       });
 
-      // The new email structure for the action doesn't require id or sentAt
+      if (!sendResult.success) {
+        throw new Error(
+          sendResult.message || "Failed to send email via Gmail."
+        );
+      }
+
+      // Step 2: If sending is successful, schedule the AI follow-up
+      const followUpResult = await scheduleFollowUp({
+        emailContent: values.body,
+        emailCategory: values.category,
+        senderEmail: "me", // 'me' represents the authenticated user
+        recipientEmail: values.to,
+        subject: values.subject,
+      });
+
+      // Step 3: Save a record of the email to your own database for tracking
       await addEmail({
         ...values,
         followUpAt: followUpResult.followUpDate,
-        attachments: attachments.map(file => ({ name: file.name, size: file.size })),
+        attachments: attachments.map((file) => ({
+          name: file.name,
+          size: file.size,
+        })),
       });
 
+      // Manually refresh the email list after successful submission
+      await refreshEmails();
 
       toast({
         title: "Email Sent!",
-        description: `Your email has been sent. ${followUpResult.reason || ''}`,
+        description: `Your email was sent via Gmail. ${
+          followUpResult.reason || ""
+        }`,
       });
 
       form.reset();
       setAttachments([]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to send email:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to send email. Please try again.",
+        title: "Error Sending Email",
+        description:
+          error.message ||
+          "Please check your connection or reconnect your Gmail account.",
       });
     } finally {
       setIsSending(false);
@@ -98,14 +122,14 @@ export function ComposeEmailForm() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setAttachments(prev => [...prev, ...Array.from(e.target.files!)]);
-      e.target.value = ''; // Reset file input
+      setAttachments((prev) => [...prev, ...Array.from(e.target.files!)]);
+      e.target.value = ""; // Reset file input
     }
   };
-  
+
   const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  }
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <Form {...form}>
@@ -130,14 +154,19 @@ export function ComposeEmailForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="internship">Internship Application</SelectItem>
+                    <SelectItem value="internship">
+                      Internship Application
+                    </SelectItem>
                     <SelectItem value="job">Job Application</SelectItem>
                     <SelectItem value="cold-outreach">Cold Outreach</SelectItem>
                   </SelectContent>
@@ -205,6 +234,9 @@ export function ComposeEmailForm() {
         />
         <div>
           <FormLabel>Attachments</FormLabel>
+          <p className="text-sm text-muted-foreground">
+            Note: Attachments are not yet sent via Gmail in this demo.
+          </p>
           <div className="mt-2 flex items-center gap-4">
             <Button type="button" variant="outline" asChild>
               <label htmlFor="file-upload" className="cursor-pointer">
@@ -212,15 +244,30 @@ export function ComposeEmailForm() {
                 Add file
               </label>
             </Button>
-            <input id="file-upload" type="file" multiple className="hidden" onChange={handleFileChange} />
+            <input
+              id="file-upload"
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+            />
           </div>
           {attachments.length > 0 && (
             <div className="mt-4 space-y-2">
               {attachments.map((file, index) => (
-                <div key={index} className="flex items-center justify-between text-sm p-2 rounded-md border bg-muted/50">
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm p-2 rounded-md border bg-muted/50"
+                >
                   <span className="truncate">{file.name}</span>
-                  <Button variant="ghost" size="icon" type="button" className="h-6 w-6 shrink-0" onClick={() => removeAttachment(index)}>
-                    <X className="h-4 w-4"/>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => removeAttachment(index)}
+                  >
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
