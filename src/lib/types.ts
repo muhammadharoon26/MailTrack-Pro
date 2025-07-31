@@ -1,5 +1,5 @@
 export interface Email {
-  id: string;
+  id: string; // Will now be the database primary key
   to: string;
   cc?: string;
   bcc?: string;
@@ -7,6 +7,6 @@ export interface Email {
   body: string;
   category: 'internship' | 'job' | 'cold-outreach';
   attachments: { name: string; size: number }[];
-  sentAt: string; // ISO string
-  followUpAt?: string; // ISO string
+  sentAt: string | Date; // Can be string or Date from DB
+  followUpAt?: string | Date; // Can be string or Date from DB
 }

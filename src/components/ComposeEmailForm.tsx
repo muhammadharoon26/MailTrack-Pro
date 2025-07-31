@@ -27,7 +27,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useEmails } from "@/hooks/use-emails";
 import { scheduleFollowUp } from "@/ai/flows/schedule-follow-up";
-import type { Email } from "@/lib/types";
 
 const formSchema = z.object({
   to: z.string().email({ message: "Invalid email address." }),
@@ -70,15 +69,13 @@ export function ComposeEmailForm() {
         subject: subject,
       });
 
-      const newEmail: Email = {
-        id: new Date().toISOString(),
+      // The new email structure for the action doesn't require id or sentAt
+      await addEmail({
         ...values,
-        sentAt: new Date().toISOString(),
         followUpAt: followUpResult.followUpDate,
         attachments: attachments.map(file => ({ name: file.name, size: file.size })),
-      };
+      });
 
-      addEmail(newEmail);
 
       toast({
         title: "Email Sent!",
