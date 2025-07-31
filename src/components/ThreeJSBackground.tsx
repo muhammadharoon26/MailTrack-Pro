@@ -32,7 +32,7 @@ function Stars(props: any) {
   );
 }
 
-export const ThreeJSBackground = () => {
+export default function ThreeJSBackground() {
   return (
     <div className="fixed inset-0 z-0 h-screen w-screen">
       <Canvas camera={{ position: [0, 0, 1] }}>

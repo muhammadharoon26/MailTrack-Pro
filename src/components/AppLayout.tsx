@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const ThreeJSBackground = dynamic(() => import("./ThreeJSBackground").then(mod => mod.ThreeJSBackground), {
+const ThreeJSBackground = dynamic(() => import("./ThreeJSBackground"), {
   ssr: false,
 });
 
