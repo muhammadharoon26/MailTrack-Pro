@@ -23,6 +23,8 @@ export async function getEmails(): Promise<Email[]> {
   try {
     // Ensure the table exists before trying to query it.
     await db.query(createEmailsTableQuery);
+    
+    // Now, query for the emails.
     const { rows } = await db.query('SELECT id, "to", cc, bcc, subject, body, category, attachments, sent_at as "sentAt", follow_up_at as "followUpAt" FROM emails ORDER BY sent_at DESC');
     
     // If no rows are returned, it's not an error, just an empty list.
@@ -30,6 +32,7 @@ export async function getEmails(): Promise<Email[]> {
     return rows || [];
   } catch (error) {
     console.error('Error fetching emails:', error);
+    // This will now provide a more detailed error in the logs if the connection fails.
     throw new Error('Could not fetch emails.');
   }
 }
@@ -39,11 +42,15 @@ export async function addEmail(email: Omit<Email, 'id' | 'sentAt'>): Promise<voi
   try {
     // Also ensure the table exists before writing.
     await db.query(createEmailsTableQuery);
+    
+    // Then, insert the new email.
     await db.query(
       `INSERT INTO emails ("to", cc, bcc, subject, body, category, attachments, sent_at, follow_up_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)`,
       [to, cc || null, bcc || null, subject, body, category, JSON.stringify(attachments), followUpAt || null]
     );
+    
+    // Revalidate paths to update the UI.
     revalidatePath('/');
     revalidatePath('/follow-up');
   } catch (error) {
