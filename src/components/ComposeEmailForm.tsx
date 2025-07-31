@@ -64,7 +64,7 @@ export function ComposeEmailForm() {
       const followUpResult = await scheduleFollowUp({
         emailContent: body,
         emailCategory: category,
-        senderEmail: "user@mailtrack.pro", // Placeholder
+        senderEmail: "your-email@example.com", // Placeholder for the logged-in user's email
         recipientEmail: to,
         subject: subject,
       });
