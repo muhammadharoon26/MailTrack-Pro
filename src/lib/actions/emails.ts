@@ -4,13 +4,10 @@ import { db, createTables } from '@/lib/db';
 import type { Email } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-// Initialize tables on first action
-(async () => {
-  await createTables();
-})();
-
 export async function getEmails(): Promise<Email[]> {
   try {
+    // Ensure the table exists before trying to query it.
+    await createTables();
     const { rows } = await db.query('SELECT id, "to", cc, bcc, subject, body, category, attachments, sent_at as "sentAt", follow_up_at as "followUpAt" FROM emails ORDER BY sent_at DESC');
     return rows as Email[];
   } catch (error) {
@@ -22,6 +19,8 @@ export async function getEmails(): Promise<Email[]> {
 export async function addEmail(email: Omit<Email, 'id' | 'sentAt'>): Promise<void> {
   const { to, cc, bcc, subject, body, category, attachments, followUpAt } = email;
   try {
+    // Also ensure the table exists before writing.
+    await createTables();
     await db.query(
       `INSERT INTO emails ("to", cc, bcc, subject, body, category, attachments, sent_at, follow_up_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)`,
