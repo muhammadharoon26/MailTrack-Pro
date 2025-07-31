@@ -64,7 +64,7 @@ export function ComposeEmailForm() {
       const followUpResult = await scheduleFollowUp({
         emailContent: body,
         emailCategory: category,
-        senderEmail: "your-email@example.com", // Placeholder for the logged-in user's email
+        senderEmail: "mharoon1326@gmail.com",
         recipientEmail: to,
         subject: subject,
       });
