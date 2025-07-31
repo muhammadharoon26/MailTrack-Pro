@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { suggestFollowUpMessage } from "@/ai/flows/suggest-follow-up-message";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, MessageSquareQuote } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 
 import {
   Dialog,
@@ -72,11 +73,16 @@ export function FollowUpList({ emails }: { emails: Email[] }) {
             <div className="flex-grow">
               <p className="font-semibold">{email.to}</p>
               <p className="text-sm text-muted-foreground truncate" title={email.subject}>{email.subject}</p>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                  <Badge variant="secondary">{categoryDisplay[email.category]}</Badge>
                  <p className="text-xs text-muted-foreground">
                     Sent {formatDistanceToNow(new Date(email.sentAt), { addSuffix: true })}
                  </p>
+                 {email.followUpAt && (
+                   <Badge variant="outline" className="text-xs">
+                     Follow-up: {format(new Date(email.followUpAt), "MMM d")}
+                   </Badge>
+                 )}
               </div>
             </div>
             <Button
