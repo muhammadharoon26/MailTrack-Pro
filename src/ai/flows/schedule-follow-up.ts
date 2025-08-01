@@ -16,8 +16,7 @@ const ScheduleFollowUpInputSchema = z.object({
   emailCategory: z
     .string()
     .describe(
-      'The category of the email (e.g., internship application, job application, cold calling).' + 
-      'This will affect how aggressively follow-up reminders are scheduled.'
+      'The category of the email (e.g., internship application, job application, cold calling).'
     ),
   senderEmail: z.string().email().describe('The email address of the sender.'),
   recipientEmail: z.string().email().describe('The email address of the recipient.'),
@@ -52,12 +51,7 @@ const scheduleFollowUpPrompt = ai.definePrompt({
   output: {schema: ScheduleFollowUpOutputSchema},
   prompt: `You are an AI assistant that helps schedule follow-up reminders for emails.
 
-  Based on the email content, category, sender, recipient, and subject, determine whether a follow-up reminder should be scheduled.
-
-  The follow-up should be scheduled 48 hours after the email was sent.
-
-  Consider the email category when determining whether to schedule a follow-up.
-  For example, job applications and internship applications should have a higher priority for follow-up reminders than cold calling emails.
+  Based on the email content, determine if a follow-up is appropriate. If it is, schedule it for exactly 36 hours after the email was sent.
 
   Email Content: {{{emailContent}}}
   Email Category: {{{emailCategory}}}
@@ -65,7 +59,7 @@ const scheduleFollowUpPrompt = ai.definePrompt({
   Recipient Email: {{{recipientEmail}}}
   Subject: {{{subject}}}
 
-  Consider all these factors and then use the output schema to return a structured response.
+  Consider all these factors and then use the output schema to return a structured response. If a follow-up is scheduled, set the followUpDate to be 36 hours from now.
   `,
 });
 
@@ -75,8 +69,16 @@ const scheduleFollowUpFlow = ai.defineFlow(
     inputSchema: ScheduleFollowUpInputSchema,
     outputSchema: ScheduleFollowUpOutputSchema,
   },
-  async input => {
+  async (input: ScheduleFollowUpInput) => {
     const {output} = await scheduleFollowUpPrompt(input);
+    
+    // If the AI decided to schedule a follow-up, calculate the exact date.
+    if (output?.followUpScheduled) {
+      const followUpDate = new Date();
+      followUpDate.setHours(followUpDate.getHours() + 36);
+      output.followUpDate = followUpDate.toISOString();
+    }
+    
     return output!;
   }
 );
