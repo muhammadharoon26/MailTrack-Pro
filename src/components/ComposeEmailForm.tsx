@@ -139,6 +139,7 @@ export function ComposeEmailForm() {
         ...values,
         followUpAt: followUpResult.followUpDate,
         attachments: attachments.map((file) => ({ name: file.name, size: file.size })),
+        user_email: currentUser.email, // <-- add this
       });
       
       await refreshEmails();

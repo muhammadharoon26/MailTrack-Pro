@@ -19,13 +19,16 @@ const createEmailsTableQuery = `
   );
 `;
 
-export async function getEmails(): Promise<Email[]> {
+export async function getEmails(user_email: string): Promise<Email[]> {
   try {
     // Ensure the table exists before trying to query it.
     await db.query(createEmailsTableQuery);
     
     // Now, query for the emails.
-    const { rows } = await db.query('SELECT id, "to", cc, bcc, subject, body, category, attachments, sent_at as "sentAt", follow_up_at as "followUpAt" FROM emails ORDER BY sent_at DESC');
+    const { rows } = await db.query(
+      'SELECT id, "to", cc, bcc, subject, body, category, attachments, sent_at as "sentAt", follow_up_at as "followUpAt" FROM emails WHERE user_email = $1 ORDER BY sent_at DESC',
+      [user_email]
+    );
     
     // If no rows are returned, it's not an error, just an empty list.
     // Return an empty array to prevent downstream errors.
@@ -37,20 +40,15 @@ export async function getEmails(): Promise<Email[]> {
   }
 }
 
-export async function addEmail(email: Omit<Email, 'id' | 'sentAt'>): Promise<void> {
-  const { to, cc, bcc, subject, body, category, attachments, followUpAt } = email;
+export async function addEmail(email: Omit<Email, 'id' | 'sentAt'> & { user_email: string }): Promise<void> {
+  const { to, cc, bcc, subject, body, category, attachments, followUpAt, user_email } = email;
   try {
-    // Also ensure the table exists before writing.
     await db.query(createEmailsTableQuery);
-    
-    // Then, insert the new email.
     await db.query(
-      `INSERT INTO emails ("to", cc, bcc, subject, body, category, attachments, sent_at, follow_up_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)`,
-      [to, cc || null, bcc || null, subject, body, category, JSON.stringify(attachments), followUpAt || null]
+      `INSERT INTO emails ("to", cc, bcc, subject, body, category, attachments, sent_at, follow_up_at, user_email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9)`,
+      [to, cc || null, bcc || null, subject, body, category, JSON.stringify(attachments), followUpAt || null, user_email]
     );
-    
-    // Revalidate paths to update the UI.
     revalidatePath('/');
     revalidatePath('/follow-up');
   } catch (error) {

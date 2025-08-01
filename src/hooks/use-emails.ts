@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,14 +9,30 @@ export function useEmails() {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const response = await fetch('/api/session');
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserEmail(data.user?.email ?? null);
+        }
+      } catch (error) {
+        setCurrentUserEmail(null);
+      }
+    }
+    fetchUser();
+  }, []);
 
   const refreshEmails = useCallback(async () => {
+    if (!currentUserEmail) return;
     setLoading(true);
     try {
-      const allEmails = await getEmails();
+      const allEmails = await getEmails(currentUserEmail);
       setEmails(allEmails);
     } catch (error) {
-      console.error("Failed to fetch emails:", error);
       toast({
         variant: "destructive",
         title: "Database Error",
@@ -27,21 +42,22 @@ export function useEmails() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, currentUserEmail]);
 
   useEffect(() => {
     refreshEmails();
   }, [refreshEmails]);
 
   const addEmail = useCallback(async (email: Omit<Email, 'id' | 'sentAt'>) => {
+    if (!currentUserEmail) return;
     try {
-      await addEmailAction(email);
+      await addEmailAction({ ...email, user_email: currentUserEmail });
       await refreshEmails();
     } catch (error) {
       console.error("Failed to add email:", error);
-      throw error; // Re-throw to be caught in the form
+      throw error;
     }
-  }, [refreshEmails]);
+  }, [refreshEmails, currentUserEmail]);
 
   return { emails, addEmail, loading, refreshEmails };
 }
