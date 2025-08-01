@@ -1,3 +1,4 @@
+// src/components/ComposeEmailForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -97,8 +98,8 @@ export function ComposeEmailForm() {
 
     setIsSending(true);
 
-    const { update, id } = toast({
-      id: "sending-email",
+    // --- FIX: Do not pass an 'id'. The toast function returns it. ---
+    const { id, update } = toast({
       title: "Sending Email...",
       description: "Your message is on its way.",
     });
@@ -143,7 +144,6 @@ export function ComposeEmailForm() {
       await refreshEmails();
 
       update({
-        id,
         title: "Email Sent!",
         description: "Your email was sent successfully via Gmail.",
       });
@@ -154,7 +154,6 @@ export function ComposeEmailForm() {
     } catch (error: any) {
       console.error("Failed to send email:", error);
       update({
-        id,
         variant: "destructive",
         title: "Error Sending Email",
         description: error.message || "Please check your connection and try again.",
@@ -178,6 +177,7 @@ export function ComposeEmailForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* ... The rest of the JSX remains unchanged ... */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}

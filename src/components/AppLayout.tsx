@@ -64,6 +64,21 @@ function AuthStatus() {
     fetchSession();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (response.ok) {
+        // On successful logout, redirect to refresh the session state
+        window.location.href = '/';
+      } else {
+        console.error('Logout failed:', await response.json());
+        // Optionally, add a toast notification here to inform the user
+      }
+    } catch (error) {
+      console.error('An error occurred during logout:', error);
+    }
+  };
+
   if (isLoading) {
     return <Skeleton className="h-9 w-40" />;
   }
@@ -91,8 +106,8 @@ function AuthStatus() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled>
-            <LogOut className="mr-2" />
+          <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

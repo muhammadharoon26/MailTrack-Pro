@@ -1,3 +1,4 @@
+// src/lib/session.ts
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
@@ -27,11 +28,9 @@ export async function decrypt(input: string): Promise<any> {
 }
 
 export async function getSession() {
-  // --- THIS IS THE FIX ---
-  // The cookies() function from next/headers is asynchronous
-  const cookieStore = await cookies();
+  // If cookies() is async, add await:
+  const cookieStore = await cookies(); // <-- add await if needed
   const session = cookieStore.get('session')?.value;
-  // --------------------
   if (!session) return null;
   return await decrypt(session);
 }
