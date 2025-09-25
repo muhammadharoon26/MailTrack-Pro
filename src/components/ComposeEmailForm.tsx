@@ -293,8 +293,9 @@ export function ComposeEmailForm() {
             <Editor
               editorState={editorState}
               onEditorStateChange={setEditorState}
-              wrapperClassName="min-h-[200px] border rounded-md"
+              wrapperClassName="min-h-[200px] border rounded-md bg-background text-foreground"
               editorClassName="px-4"
+              toolbarClassName="border-b bg-background"
               placeholder="Dear hiring manager..."
             />
           </FormControl>
