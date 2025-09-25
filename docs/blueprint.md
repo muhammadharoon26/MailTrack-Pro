@@ -1,15 +1,15 @@
 # **App Name**: MailTrack Pro
 
-## Core Features:
+## Core Features
 
 - Email Composition: Compose new emails with To, CC, and BCC fields, plus a subject line and body.
 - Attachment Handling: Attach one or more files to emails before sending.
 - Email Sending: Send emails directly from the application.
 - Automated Follow-up Scheduling: AI-powered tool that automatically schedules follow-up reminders 48 hours after sending an email if no reply is received.
 - Follow-up Task Display: Display a list of emails that require follow-up based on the automated schedule.
-- Email Categorization: Categorize emails (e.g., internship applications, job applications, cold calling) to improve automated follow-up scheduling. 
+- Email Categorization: Categorize emails (e.g., internship applications, job applications, cold calling) to improve automated follow-up scheduling.
 
-## Style Guidelines:
+## Style Guidelines
 
 - Primary color: Deep blue (#3F51B5) to convey professionalism and trust.
 - Background color: Light grey (#ECEFF1) for a clean, neutral interface.

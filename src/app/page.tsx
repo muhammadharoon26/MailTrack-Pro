@@ -1,7 +1,13 @@
-import { ComposeEmailForm } from '@/components/ComposeEmailForm';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ComposeEmailForm } from "@/components/ComposeEmailForm";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function ComposePage() {
   return (
@@ -9,7 +15,9 @@ export default function ComposePage() {
       <Card>
         <CardHeader>
           <CardTitle>Compose Email</CardTitle>
-          <CardDescription>Draft and send your professional emails from here.</CardDescription>
+          <CardDescription>
+            Draft and send your professional emails from here.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ComposeEmailForm />
