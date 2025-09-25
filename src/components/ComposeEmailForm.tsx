@@ -18,11 +18,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import dynamic from "next/dynamic";
-import type { Quill } from "react-quill";
-const ReactQuill = dynamic(() => import("react-quill"), {
-  ssr: false,
-}) as unknown as React.FC<any>;
-import "react-quill/dist/quill.snow.css";
+import { EditorState, convertToRaw } from "draft-js";
+import { stateToHTML } from "draft-js-export-html";
+import { Editor } from "react-draft-wysiwyg";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import {
   Select,
   SelectContent,
@@ -65,7 +64,9 @@ export function ComposeEmailForm() {
   const { toast } = useToast();
   const { refreshEmails } = useEmails();
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [quillValue, setQuillValue] = useState<string>("");
+    const [editorState, setEditorState] = useState(() =>
+    EditorState.createEmpty()
+  );
   const [isSending, setIsSending] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -101,8 +102,9 @@ export function ComposeEmailForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Use quillValue for body
-    values.body = quillValue;
+    const contentState = editorState.getCurrentContent();
+    const htmlBody = stateToHTML(contentState);
+    values.body = htmlBody;
     if (!currentUser?.email) {
       toast({
         variant: "destructive",
@@ -173,6 +175,7 @@ export function ComposeEmailForm() {
 
       form.reset();
       setAttachments([]);
+      setEditorState(EditorState.createEmpty());
     } catch (error: any) {
       console.error("Failed to send email:", error);
       update({
@@ -287,21 +290,12 @@ export function ComposeEmailForm() {
         <FormItem>
           <FormLabel>Body</FormLabel>
           <FormControl>
-            <ReactQuill
-              theme="snow"
-              value={quillValue}
-              onChange={setQuillValue}
+            <Editor
+              editorState={editorState}
+              onEditorStateChange={setEditorState}
+              wrapperClassName="min-h-[200px] border rounded-md"
+              editorClassName="px-4"
               placeholder="Dear hiring manager..."
-              className="min-h-[200px]"
-              modules={{
-                toolbar: [
-                  [{ header: [1, 2, false] }],
-                  ["bold", "italic", "underline", "strike"],
-                  [{ list: "ordered" }, { list: "bullet" }],
-                  ["link", "image"],
-                  ["clean"],
-                ],
-              }}
             />
           </FormControl>
         </FormItem>
