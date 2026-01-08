@@ -22,6 +22,18 @@ export async function sendGmail(params: SendEmailParams) {
     const gmail = await getGmailClient();
     const boundary = `----=_Part_${Math.random().toString(36).substring(2)}`;
     
+    // Check total size of attachments (approximate)
+    if (params.attachments) {
+        const totalSize = params.attachments.reduce((acc, att) => acc + att.content.length, 0); 
+        // Base64 is ~1.33x larger than binary. Gmail limit is 25MB. 
+        // 25MB = 26214400 bytes. Safe limit for base64 string ~ 35MB. 
+        // But headers also take space, so we check raw binary size estimate or just be conservative.
+        // Let's use 25MB limit on the base64 content to be safe.
+        if (totalSize > 25 * 1024 * 1024 * 1.33) { 
+             return { success: false, message: 'Total attachment size exceeds the 25MB limit.' };
+        }
+    }
+    
     let emailBody = '';
 
     // Headers

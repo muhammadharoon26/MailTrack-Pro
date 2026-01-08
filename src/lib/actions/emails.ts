@@ -7,15 +7,16 @@ import { revalidatePath } from 'next/cache';
 const createEmailsTableQuery = `
   CREATE TABLE IF NOT EXISTS emails (
     id SERIAL PRIMARY KEY,
-    "to" VARCHAR(255) NOT NULL,
-    cc VARCHAR(255),
-    bcc VARCHAR(255),
+    "to" TEXT NOT NULL,
+    cc TEXT,
+    bcc TEXT,
     subject TEXT NOT NULL,
     body TEXT NOT NULL,
     category VARCHAR(50) NOT NULL,
     attachments JSONB,
     sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    follow_up_at TIMESTAMP WITH TIME ZONE
+    follow_up_at TIMESTAMP WITH TIME ZONE,
+    user_email VARCHAR(255) NOT NULL
   );
 `;
 

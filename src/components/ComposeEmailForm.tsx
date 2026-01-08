@@ -18,10 +18,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import dynamic from "next/dynamic";
-import { EditorState, convertToRaw } from "draft-js";
-import { stateToHTML } from "draft-js-export-html";
-import { Editor } from "react-draft-wysiwyg";
-import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import {
   Select,
   SelectContent,
@@ -64,9 +63,7 @@ export function ComposeEmailForm() {
   const { toast } = useToast();
   const { refreshEmails } = useEmails();
   const [attachments, setAttachments] = useState<File[]>([]);
-    const [editorState, setEditorState] = useState(() =>
-    EditorState.createEmpty()
-  );
+  const [emailBody, setEmailBody] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -102,9 +99,7 @@ export function ComposeEmailForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const contentState = editorState.getCurrentContent();
-    const htmlBody = stateToHTML(contentState);
-    values.body = htmlBody;
+    values.body = emailBody;
     if (!currentUser?.email) {
       toast({
         variant: "destructive",
@@ -175,7 +170,7 @@ export function ComposeEmailForm() {
 
       form.reset();
       setAttachments([]);
-      setEditorState(EditorState.createEmpty());
+      setEmailBody("");
     } catch (error: any) {
       console.error("Failed to send email:", error);
       update({
@@ -191,7 +186,23 @@ export function ComposeEmailForm() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setAttachments((prev) => [...prev, ...Array.from(e.target.files!)]);
+      const newFiles = Array.from(e.target.files);
+      const totalSize = [...attachments, ...newFiles].reduce(
+        (acc, file) => acc + file.size,
+        0
+      );
+
+      if (totalSize > 25 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "Attachments too large",
+          description: "Total attachment size cannot exceed 25MB.",
+        });
+        e.target.value = "";
+        return;
+      }
+
+      setAttachments((prev) => [...prev, ...newFiles]);
       e.target.value = "";
     }
   };
@@ -293,13 +304,24 @@ export function ComposeEmailForm() {
         <FormItem>
           <FormLabel>Body</FormLabel>
           <FormControl>
-            <Editor
-              editorState={editorState}
-              onEditorStateChange={.setEditorState}
-              wrapperClassName="min-h-[200px] border rounded-md bg-background text-foreground"
-              editorClassName="px-4"
-              toolbarClassName="border-b bg-background"
+            <ReactQuill
+              theme="snow"
+              value={emailBody}
+              onChange={setEmailBody}
+              className="min-h-[200px] bg-background text-foreground"
               placeholder="Dear hiring manager..."
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                  [{ size: ["small", false, "large", "huge"] }],
+                  [{ font: [] }],
+                  ["bold", "italic", "underline", "strikethrough"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  [{ align: [] }],
+                  ["link"],
+                  ["clean"],
+                ],
+              }}
             />
           </FormControl>
         </FormItem>

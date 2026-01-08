@@ -8,8 +8,12 @@ if (!process.env.POSTGRES_URL) {
 
 // Create a new Pool instance with the connection string.
 // Vercel's environment variables will be used automatically.
-const db = new Pool({
-  connectionString: process.env.POSTGRES_URL,
-});
+const globalForDb = global as unknown as { db: Pool };
 
-export { db };
+export const db =
+  globalForDb.db ||
+  new Pool({
+    connectionString: process.env.POSTGRES_URL,
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForDb.db = db;
