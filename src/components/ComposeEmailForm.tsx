@@ -176,9 +176,16 @@ export function ComposeEmailForm() {
 
       await refreshEmails();
 
+      // Check if AI used fallback and show appropriate message
+      const usedFallback =
+        followUpResult.reason?.includes("AI service unavailable") ||
+        followUpResult.reason?.includes("fallback");
+
       update({
         title: "Email Sent!",
-        description: "Your email was sent successfully via Gmail.",
+        description: usedFallback
+          ? "Your email was sent successfully. AI scheduling is temporarily unavailable, so follow-up was set to 36 hours from now."
+          : "Your email was sent successfully via Gmail.",
       });
 
       form.reset();
