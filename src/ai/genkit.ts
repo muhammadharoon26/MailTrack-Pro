@@ -10,7 +10,7 @@ import {getNextApiKey} from './api-key-manager';
 export function createAIWithKey(apiKey: string) {
   return genkit({
     plugins: [googleAI({apiKey})],
-    model: 'googleai/gemini-3.0-flash-preview',
+    model: 'googleai/gemini-3-flash-preview',
   });
 }
 
@@ -27,5 +27,5 @@ export const ai = primaryKey
   ? createAIWithKey(primaryKey)
   : genkit({
       plugins: [googleAI()], // Fallback to env variable GOOGLE_API_KEY
-      model: 'googleai/gemini-3.0-flash-preview',
+      model: 'googleai/gemini-3-flash-preview',
     });
