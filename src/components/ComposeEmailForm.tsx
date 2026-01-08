@@ -40,7 +40,7 @@ const formSchema = z.object({
   bcc: z.string().optional(),
   subject: z.string().min(1, { message: "Subject is required." }),
   category: z.enum(["internship", "job", "cold-outreach", "Promogen Lead"]),
-  body: z.string().min(1, { message: "Email body cannot be empty." }), // will store HTML
+  body: z.string().optional(), // Validated separately via emailBody state
 });
 
 interface User {
@@ -99,7 +99,19 @@ export function ComposeEmailForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Sync the email body from the ReactQuill editor to the form values
     values.body = emailBody;
+
+    // Validate that body is not empty
+    if (!emailBody || emailBody.trim() === "" || emailBody === "<p><br></p>") {
+      toast({
+        variant: "destructive",
+        title: "Missing Email Body",
+        description: "Please enter a message in the email body.",
+      });
+      return;
+    }
+
     if (!currentUser?.email) {
       toast({
         variant: "destructive",
@@ -153,12 +165,13 @@ export function ComposeEmailForm() {
 
       await addEmail({
         ...values,
+        body: emailBody, // Explicitly set body as string (validated above)
         followUpAt: followUpResult.followUpDate,
         attachments: attachments.map((file) => ({
           name: file.name,
           size: file.size,
         })),
-        user_email: currentUser.email, // <-- add this
+        user_email: currentUser.email,
       });
 
       await refreshEmails();
