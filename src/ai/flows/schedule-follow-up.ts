@@ -48,6 +48,8 @@ export type ScheduleFollowUpOutput = z.infer<typeof ScheduleFollowUpOutputSchema
 export async function scheduleFollowUp(input: ScheduleFollowUpInput): Promise<ScheduleFollowUpOutput> {
   const apiKeys = getAllApiKeys();
   
+  console.log(`[Schedule Follow-up] Starting with ${apiKeys.length} available API key(s)`);
+  
   // If no API keys are configured, use fallback immediately
   if (apiKeys.length === 0) {
     console.warn('[Schedule Follow-up] No API keys configured. Using fallback scheduling.');
@@ -57,40 +59,55 @@ export async function scheduleFollowUp(input: ScheduleFollowUpInput): Promise<Sc
   // Try each API key in sequence
   for (let i = 0; i < apiKeys.length; i++) {
     try {
-      console.log(`[Schedule Follow-up] Attempting with API key ${i + 1}/${apiKeys.length}`);
+      const keyPreview = apiKeys[i].substring(0, 10) + '...';
+      console.log(`[Schedule Follow-up] Attempting with API key ${i + 1}/${apiKeys.length} (${keyPreview})`);
       
       const aiInstance = createAIWithKey(apiKeys[i]);
       const result = await executeScheduleFlow(aiInstance, input);
       
-      console.log('[Schedule Follow-up] Successfully scheduled using AI');
+      console.log(`[Schedule Follow-up] ✅ Successfully scheduled using AI with key ${i + 1}`);
       return result;
       
     } catch (error: any) {
-      const isQuotaError = error?.message?.includes('429') || 
-                          error?.message?.includes('quota') ||
-                          error?.status === 429;
+      // Enhanced error detection
+      const errorMessage = error?.message || '';
+      const errorString = JSON.stringify(error);
+      const isQuotaError = error?.status === 429 ||
+                          errorMessage.includes('429') || 
+                          errorMessage.includes('quota') ||
+                          errorMessage.includes('Too Many Requests') ||
+                          errorString.includes('429');
       
-      console.error(`[Schedule Follow-up] Error with API key ${i + 1}:`, {
+      console.error(`[Schedule Follow-up] ❌ Error with API key ${i + 1}:`, {
         isQuotaError,
-        message: error?.message,
         status: error?.status,
+        message: errorMessage,
+        errorType: error?.constructor?.name,
+        fullError: errorString.substring(0, 500), // First 500 chars of error
       });
 
       // If it's a quota error and we have more keys to try, continue to next key
       if (isQuotaError && i < apiKeys.length - 1) {
-        console.log(`[Schedule Follow-up] Quota exceeded. Trying next API key...`);
+        console.log(`[Schedule Follow-up] 🔄 Quota exceeded. Trying next API key...`);
         continue;
       }
       
       // If it's the last key or a non-quota error, use fallback
       if (i === apiKeys.length - 1) {
-        console.warn('[Schedule Follow-up] All API keys exhausted. Using fallback.');
+        console.warn('[Schedule Follow-up] ⚠️ All API keys exhausted. Using fallback.');
+        return createFallbackResponse();
+      }
+      
+      // For non-quota errors on non-last keys, also try fallback
+      if (!isQuotaError) {
+        console.warn('[Schedule Follow-up] ⚠️ Non-quota error encountered. Using fallback.');
         return createFallbackResponse();
       }
     }
   }
   
   // Fallback if all attempts failed
+  console.warn('[Schedule Follow-up] ⚠️ All attempts failed. Using fallback.');
   return createFallbackResponse();
 }
 
