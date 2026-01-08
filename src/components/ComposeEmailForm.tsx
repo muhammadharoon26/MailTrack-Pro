@@ -40,7 +40,7 @@ const formSchema = z.object({
   cc: z.string().optional(),
   bcc: z.string().optional(),
   subject: z.string().min(1, { message: "Subject is required." }),
-  category: z.enum(["internship", "job", "cold-outreach"]),
+  category: z.enum(["internship", "job", "cold-outreach", "Promogen Lead"]),
   body: z.string().min(1, { message: "Email body cannot be empty." }), // will store HTML
 });
 
@@ -240,6 +240,9 @@ export function ComposeEmailForm() {
                       <SelectItem value="cold-outreach">
                         Cold Outreach
                       </SelectItem>
+                      <SelectItem value="Promogen Lead">
+                        Promogen Lead
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>
@@ -292,7 +295,7 @@ export function ComposeEmailForm() {
           <FormControl>
             <Editor
               editorState={editorState}
-              onEditorStateChange={setEditorState}
+              onEditorStateChange={.setEditorState}
               wrapperClassName="min-h-[200px] border rounded-md bg-background text-foreground"
               editorClassName="px-4"
               toolbarClassName="border-b bg-background"

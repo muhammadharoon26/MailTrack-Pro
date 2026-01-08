@@ -30,7 +30,7 @@ export function FollowUpList({ emails }: { emails: Email[] }) {
     setSelectedEmail(email);
     setIsLoadingSuggestion(true);
     try {
-      const result = await suggestFollowUpMessage({ originalEmail: email.body });
+      const result = await suggestFollowUpMessage({ originalEmail: email.body, emailCategory: email.category });
       setSuggestion(result.followUpSuggestion);
     } catch (error) {
       console.error("Failed to get suggestion:", error);
@@ -63,6 +63,7 @@ export function FollowUpList({ emails }: { emails: Email[] }) {
     internship: "Internship",
     job: "Job Application",
     "cold-outreach": "Cold Outreach",
+    "Promogen Lead": "Promogen Lead",
   }
 
   return (

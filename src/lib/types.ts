@@ -5,7 +5,7 @@ export interface Email {
   bcc?: string;
   subject: string;
   body: string;
-  category: 'internship' | 'job' | 'cold-outreach';
+  category: 'internship' | 'job' | 'cold-outreach' | 'Promogen Lead';
   attachments: { name: string; size: number }[];
   sentAt: string | Date; // Can be string or Date from DB
   followUpAt?: string | Date; // Can be string or Date from DB
